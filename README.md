@@ -1,6 +1,6 @@
 # bashinator
 
-**Version:** `0.1.0`
+**Version:** `0.1.1`
 
 Lightweight Bash validation helpers for common types, formats, and safe text.
 Designed for CLI scripts, CI/CD jobs, and automation where quick input checks
@@ -8,7 +8,7 @@ save time and prevent mistakes.
 
 ## Features
 
-- Type and format checks (integers, UUID, IP, CIDR, Base64, date format)
+- Type and format checks (integers, UUID, IP, IPv4 CIDR, Base64, date format)
 - Safe text validation to reduce shell injection risk
 - Small, dependency-free, easy to source
 - Clear return codes: `0` pass, `1` fail
@@ -49,7 +49,7 @@ Each function returns a status code: `0` means valid, `1` means invalid.
 | `IsGreaterZero value` | string | status | `0` if integer >= 0 |
 | `IsIPv4 value` | string | status | `0` if valid IPv4 |
 | `IsIPv6 value` | string | status | `0` if IPv6 format |
-| `IsCidr value` | string | status | `0` if CIDR format |
+| `IsIPv4CIDR value` | string | status | `0` if IPv4 CIDR format |
 | `IsUUID value` | string | status | `0` if UUID 8-4-4-4-12 |
 | `IsBase64 value` | string | status | `0` if Base64 chars/padding |
 | `IsDate value` | string | status | `0` if `YYYY-MM-DD` format |
@@ -126,7 +126,8 @@ Based on the current code style and common Bash repos:
 ## Notes
 
 - `IsDate` validates format only (`YYYY-MM-DD`), not calendar correctness.
-- `IsIPv6` and `IsCidr` are basic format checks, not deep validation.
+- `IsIPv6` and `IsIPv4CIDR` are basic format checks, not deep validation.
+- `IsIPv4CIDR` validates masks `0..32` without leading zeros.
 - `IsBase64` checks allowed characters and padding only.
 - `IsInteger` accepts signed integers but not `+` sign or dots.
 

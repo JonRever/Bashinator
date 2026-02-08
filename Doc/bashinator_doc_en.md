@@ -1,6 +1,6 @@
 # bashinator Library
 
-**Version:** `0.1.0`
+**Version:** `0.1.1`
 
 A set of Bash functions for validating types, formats, and safe text. All
 functions return a status code: `0` means validation passed, `1` means failed.
@@ -22,7 +22,7 @@ source "./bashinator.sh"
 ## Common use cases
 
 - Validate CLI arguments and environment variables before running logic.
-- Check formats (IP, UUID, CIDR) before network operations.
+- Check formats (IP, UUID, IPv4 CIDR) before network operations.
 - Block dangerous characters before using user input in shell commands.
 - Fall back to safe defaults on invalid input.
 - Ensure values belong to an allowed list.
@@ -143,14 +143,14 @@ if ! IsIPv6 "$TARGET_IP"; then
 fi
 ```
 
-### `IsCidr value`
+### `IsIPv4CIDR value`
 
-Use case: network range for firewall/ACL.
-Input: string. Output: `0` — CIDR format, `1` — otherwise.
+Use case: IPv4 network range for firewall/ACL.
+Input: string. Output: `0` — IPv4 CIDR format, `1` — otherwise.
 
 ```bash
-if ! IsCidr "$NETWORK"; then
-  printf '%s\n' "CIDR must look like 10.0.0.0/24" >&2
+if ! IsIPv4CIDR "$NETWORK"; then
+  printf '%s\n' "IPv4 CIDR must look like 10.0.0.0/24" >&2
   exit 1
 fi
 ```
@@ -270,7 +270,8 @@ esac
 - `IsInteger` accepts signed integers, but not `+` sign or dot.
 - `IsPositiveInteger` requires > 0; `IsGreaterZero` allows zero.
 - `IsDate` checks `YYYY-MM-DD` format only, not the actual calendar date.
-- `IsIPv6` and `IsCidr` perform basic format checks without deep validation.
+- `IsIPv6` and `IsIPv4CIDR` perform basic format checks without deep validation.
+- `IsIPv4CIDR` validates masks `0..32` without leading zeros.
 - `IsBase64` checks allowed characters and padding only.
 - `ContainsDangerousChars` checks for: `<`, `>`, `&`, `` ` ``, `$`, `;`, `\`.
   defined separately if needed.

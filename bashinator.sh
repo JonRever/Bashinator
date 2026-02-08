@@ -7,10 +7,8 @@ IsEmpty()
     
 	if [[ -z $value ]]
     then
-		unset value
         return 0
     else
-		unset value
         return 1
     fi
 }
@@ -44,10 +42,8 @@ IsString()
     
     if [[ "$value" =~ [[:alpha:]] ]]
     then
-        unset value
         return 0
     else
-        unset value
         return 1
     fi
 }
@@ -58,11 +54,9 @@ IsInteger()
 
     if [[ "$value" =~ ^-?[0-9]+$ ]]
 	then
-		unset value
 		return 0
 	fi
 
-    unset value
     return 1
 }
 
@@ -72,16 +66,13 @@ IsPositiveInteger()
 
 	if ! IsInteger "$value"
 	then
-		unset value
 		return 1
     fi
 
     if [[ $value -le 0 ]]
     then
-		unset value
         return 1
     else
-		unset value
         return 0
     fi
 }
@@ -92,16 +83,13 @@ IsGreaterZero()
 
 	if ! IsInteger "$value"
 	then
-		unset value
 		return 1
     fi
 
     if [[ $value -lt 0 ]]
     then
-		unset value
         return 1
     else
-		unset value
         return 0
     fi
 }
@@ -112,18 +100,20 @@ IsIPv4()
 
 	if [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]
 	then
-		local IFS='.'
-        local -a octets=("$ip")
-        
+        local -a octets
+
+        IFS='.' readarray -t octets <<< "$ip"
+
 		for octet in "${octets[@]}"
 		do
             if [[ $octet -le 255 ]]
             then
-                :
+                continue
             else
                 return 1
             fi
         done
+
         return 0
 	else
 		return 1
@@ -142,16 +132,24 @@ IsIPv6()
     fi
 }
 
-IsCidr() 
+IsIPv4CIDR() 
 {
     local cidr="$1"
+    local ip
     
-	if [[ $cidr =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]]
+	if [[ $cidr =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/(0|[1-9]|[12][0-9]|3[0-2])$ ]]
     then
+        ip="${cidr%%/*}"
+
+        if ! IsIPv4 "$ip"
+        then
+            return 1
+        fi
+
         return 0
-    else
-        return 1
     fi
+        
+    return 1
 }
 
 IsUUID() 
