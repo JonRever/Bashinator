@@ -496,6 +496,9 @@ IsJSON()
                     'value')
                         return 0
                     ;;
+                    '[')
+                        return 0
+                    ;;
                     *)
                         return 1
                     ;;
@@ -542,6 +545,9 @@ IsJSON()
                         return 0
                     ;;
                     ':')
+                        return 0
+                    ;;
+                    '[')
                         return 0
                     ;;
                     *)
@@ -598,7 +604,26 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '}'|',')
+            '}')
+                case "$next_token" in
+                    'value')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    '{')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            ',')
                 case "$next_token" in
                     'value')
                         return 0
