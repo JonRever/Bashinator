@@ -331,19 +331,19 @@ IsJSON()
 
     found_correspondence()
     {
-        local -n ArrayName="$1"
-        local -n CheckedIndexes="$2"
+        local -n array_name="$1"
+        local checked_indexes_name="$2"
         local index="$3"
         local expected_token="$4"
         local shift_mode="$5"
         local max_index min_index CorrespondedIndex
 
-        max_index=$(( ${#ArrayName[@]} - 1 ))
+        max_index=$(( ${#array_name[@]} - 1 ))
         min_index=0
 
         case "$shift_mode" in
             'right')
-                until [[ $expected_token == "${ArrayName[$index]}" ]] && ! IsValueInArray "$index" CheckedIndexes
+                until [[ $expected_token == "${array_name[$index]}" ]] && ! IsValueInArray "$index" "$checked_indexes_name"
                 do
                     index=$(( index + 1 ))
                     if [[ $index -gt $max_index ]]
@@ -358,7 +358,7 @@ IsJSON()
                 return 0
             ;;
             'left')
-                until [[ $expected_token == "${ArrayName[$index]}" ]] && ! IsValueInArray "$index" CheckedIndexes
+                until [[ $expected_token == "${array_name[$index]}" ]] && ! IsValueInArray "$index" "$checked_indexes_name"
                 do
                     index=$(( index - 1 ))
                     if [[ $index -lt $min_index ]]
@@ -622,13 +622,13 @@ IsJSON()
 
     check_next_token()
     {
-        local -n ArrayName="$1"
+        local -n array="$1"
         local index="$2"
         local check_mode="$3"
         local token
         local -a ArrayToCheck
 
-        ArrayToCheck=("${ArrayName[@]}")
+        ArrayToCheck=("${array[@]}")
 
         token="${ArrayToCheck[index]}"
 
@@ -653,14 +653,14 @@ IsJSON()
 
     check_json_structure()
     {
-        local -n ArrayName="$1"
+        local -n array_name="$1"
         local IndexRight="$2"
         local IndexLeft="$3"
         local TokenRight TokenLeft CorrespondedIndex expected_token
         local -a TokenArray
         local -a CheckedIndexes
 
-        TokenArray=("${ArrayName[@]}")
+        TokenArray=("${array_name[@]}")
 
         while (( IndexLeft <= IndexRight ))
         do
