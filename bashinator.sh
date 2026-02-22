@@ -767,10 +767,17 @@ IsJSON()
     
     if IsEmpty "$JsonInput"
     then
+        Log -e 'Empty JSON input'
         return 1
     fi
 
+    Log -d "JSON input: $JsonInput"
+
+    Log -d 'Tokenising JSON input...'
+
     TokenString=$(tokenise_json "$JsonInput")
+
+    Log -d "Tokenised JSON: $TokenString"
 
     IFS=' ' read -r -a TokensArray <<< "$TokenString"
 
@@ -781,19 +788,23 @@ IsJSON()
 
     if (( ${#TokensArray[@]} == 1 )) && [[ "${TokensArray[$IndexLeft]}" == "value" ]]
     then
+        Log -d 'Single value JSON input'
         return 0
     fi
 
     if [[ "${TokensArray[$IndexLeft]}" != "value" && "${TokensArray[$IndexLeft]}" != "{" && "${TokensArray[$IndexLeft]}" != "[" ]]
     then
+        Log -e 'Invalid JSON input'
         return 1
     fi
 
     if ! check_json_structure TokensArray "$IndexRight" "$IndexLeft"
     then
+        Log -e 'Invalid JSON structure'
         return 1
     fi
 
+    Log -i 'Valid JSON input'
     return 0
 }
 
