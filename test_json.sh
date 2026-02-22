@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-source "/BashLoger/BashLoger.sh" "/tmp/bashinator.log" "[Bashinator] DEBUG"
+source /BashLoger/BashLoger.sh /tmp/bashinator.log [Bashinator] DEBUG
 source "./bashinator.sh"
 
 FilePath=$1

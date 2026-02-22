@@ -671,6 +671,7 @@ IsJSON()
                 '{'|'['|'}'|']')
                     if ! check_next_token TokenArray "$IndexRight" 'left'
                     then
+                        Log -e 'Invalid next token'
                         return 1
                     fi
 
@@ -691,10 +692,19 @@ IsJSON()
                             ;;
                         esac
 
+                        Log -d "Expected token: $expected_token"
+                        Log -d "Index left: $IndexLeft"
+                        Log -d "Index right: $IndexRight"
+                        Log -d "Token array: ${TokenArray[*]}"
+                        Log -d "Checked indexes: ${CheckedIndexes[*]}"
+
+                        Log -d 'Finding corresponding index...'
+
                         CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexLeft" "$expected_token" 'right')"
 
                         if IsEmpty "$CorrespondedIndex"
                         then
+                            Log -e 'No corresponding index found'
                             return 1
                         fi
 
@@ -707,6 +717,7 @@ IsJSON()
                 *)
                     if ! check_next_token TokenArray "$IndexRight" 'left'
                     then
+                        Log -e 'Invalid next token'
                         return 1
                     fi
                 ;;
@@ -716,6 +727,7 @@ IsJSON()
                 '{'|'['|'}'|']')
                     if ! check_next_token TokenArray "$IndexLeft" 'right'
                     then
+                        Log -e 'Invalid next token'
                         return 1
                     fi
 
@@ -736,10 +748,19 @@ IsJSON()
                             ;;
                         esac
 
+                        Log -d "Expected token: $expected_token"
+                        Log -d "Index left: $IndexLeft"
+                        Log -d "Index right: $IndexRight"
+                        Log -d "Token array: ${TokenArray[*]}"
+                        Log -d "Checked indexes: ${CheckedIndexes[*]}"
+
+                        Log -d 'Finding corresponding index...'
+
                         CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexRight" "$expected_token" 'left')"
 
                         if IsEmpty "$CorrespondedIndex"
                         then
+                            Log -e 'No corresponding index found'
                             return 1
                         fi
 
@@ -752,6 +773,7 @@ IsJSON()
                 *)
                     if ! check_next_token TokenArray "$IndexLeft" 'right'
                     then
+                        Log -e 'Invalid next token'
                         return 1
                     fi
                 ;;
@@ -762,6 +784,7 @@ IsJSON()
 
         done
 
+        Log -d 'JSON structure is valid'
         return 0
     }
     
@@ -783,6 +806,8 @@ IsJSON()
 
     IndexLeft=0
     IndexRight=$(( ${#TokensArray[@]} - 1 ))
+
+    Log -d 'Normalizing token types...'
 
     normalize_token_types TokensArray
 
