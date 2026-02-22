@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# bashinator version 0.1.0
+# bashinator version 0.1.3
 
 IsEmpty()
 {
@@ -283,6 +283,518 @@ IsValueInArray()
         fi
     done
     return 1
+}
+
+IsJSON()
+{   
+    local JsonInput="$1"
+    local -a TokensArray
+    local IndexRight IndexLeft TokenString
+
+    tokenise_json()
+    {
+        local json_input="$1"
+        local json_tokenised json_safe json_raw
+        
+        json_raw=$(sed 's/\\"/\x01/g; s/"[^"]*"/some_val/g' <<< "$json_input")
+
+        json_safe=$(sed -E 's/null/value/g; s/true/value/g; s/false/value/g; s/-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/value/g;' <<< "$json_raw")
+        
+        json_tokenised=$(sed 's/:/ : /g; s/[,]/ , /g; s/[{]/ { /g; s/[}]/ } /g; s/\[/ [ /g; s/\]/ ] /g; s/some_val/ some_val /g; s/value/ value /g; s/ \+/ /g' <<< "$json_safe")
+
+        printf '%s' "$json_tokenised"
+    }
+
+    normalize_token_types()
+    {
+        local -n ArrayName="$1"
+        local Index LastIndex NextToken
+        
+        LastIndex=$(( ${#ArrayName[@]} - 1 ))
+
+        for (( Index=0; Index<=LastIndex; Index++ ))
+        do
+            if [[ "${ArrayName[Index]}" == "some_val" ]]
+            then
+                NextToken="${ArrayName[Index+1]}"
+                
+                if [[ "$NextToken" == ":" ]]
+                then
+
+                    ArrayName[Index]='key'
+                else
+                    ArrayName[Index]='value'
+                fi
+            fi
+        done
+    }
+
+    found_correspondence()
+    {
+        local -n ArrayName="$1"
+        local -n CheckedIndexes="$2"
+        local index="$3"
+        local expected_token="$4"
+        local shift_mode="$5"
+        local max_index min_index CorrespondedIndex
+
+        max_index=$(( ${#ArrayName[@]} - 1 ))
+        min_index=0
+
+        case "$shift_mode" in
+            'right')
+                until [[ $expected_token == "${ArrayName[$index]}" ]] && ! IsValueInArray "$index" CheckedIndexes
+                do
+                    index=$(( index + 1 ))
+                    if [[ $index -gt $max_index ]]
+                    then
+                        return 1
+                    fi
+                done
+
+                CorrespondedIndex="$index"
+
+                printf '%s' "$CorrespondedIndex"
+                return 0
+            ;;
+            'left')
+                until [[ $expected_token == "${ArrayName[$index]}" ]] && ! IsValueInArray "$index" CheckedIndexes
+                do
+                    index=$(( index - 1 ))
+                    if [[ $index -lt $min_index ]]
+                    then
+                        return 1
+                    fi
+                done
+
+                CorrespondedIndex="$index"
+
+                printf '%s' "$CorrespondedIndex"
+                return 0
+            ;;
+        esac
+    }
+
+    expected_map()
+    {
+        local token="$1"
+        local next_token="$2"
+        
+        case "$token" in
+            'key')
+                case "$next_token" in
+                    ':')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            ':')
+                case "$next_token" in
+                    'value')
+                        return 0
+                    ;;
+                    '{')
+                        return 0
+                    ;;
+                    '[')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '{')
+                case "$next_token" in
+                    'key')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '[')
+                case "$next_token" in
+                    'value')
+                        return 0
+                    ;;
+                    '{')
+                        return 0
+                    ;;
+                    '[')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            'value')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            ']')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '}')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            ',')
+                case "$next_token" in
+                    'key')
+                        return 0
+                    ;;
+                    '{')
+                        return 0
+                    ;;
+                    'value')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            *)
+                return 1
+            ;;
+        esac
+    }
+
+    expected_map_reverse()
+    {
+        local token="$1"
+        local next_token="$2"
+
+        
+        case "$token" in
+            'key')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    '{')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                esac
+            ;;
+            ':')
+                case "$next_token" in
+                    'key')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '{')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    ':')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                esac
+            ;;
+            '[')
+                case "$next_token" in
+                    ':')
+                        return 0
+                    ;;
+                    '[')
+                        return 0
+                    ;;
+                    ',')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                esac
+            ;;
+            'value')
+                case "$next_token" in
+                    '[')
+                        return 0
+                    ;;
+                    ':')
+                        return 0
+                    ;;
+                    ',')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            ']')
+                case "$next_token" in
+                    'value')
+                        return 0
+                    ;;
+                    '[')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '}'|',')
+                case "$next_token" in
+                    'value')
+                        return 0
+                    ;;
+                    '}')
+                        return 0
+                    ;;
+                    ']')
+                        return 0
+                    ;;
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            *)
+                return 1
+            ;;
+        esac
+    }
+
+    check_next_token()
+    {
+        local -n ArrayName="$1"
+        local index="$2"
+        local check_mode="$3"
+        local token
+        local -a ArrayToCheck
+
+        ArrayToCheck=("${ArrayName[@]}")
+
+        token="${ArrayToCheck[index]}"
+
+        case "$check_mode" in
+            'right')
+                next_token="${ArrayToCheck[index + 1]}"
+                if ! expected_map "$token" "$next_token"
+                then
+                    return 1
+                fi
+            ;;
+            'left')
+                next_token="${ArrayToCheck[index - 1]}"
+                if ! expected_map_reverse "$token" "$next_token"
+                then
+                    return 1
+                fi
+            ;;
+        esac
+
+    }
+
+    check_json_structure()
+    {
+        local -n ArrayName="$1"
+        local IndexRight="$2"
+        local IndexLeft="$3"
+        local TokenRight TokenLeft CorrespondedIndex expected_token
+        local -a TokenArray
+        local -a CheckedIndexes
+
+        TokenArray=("${ArrayName[@]}")
+
+        while (( IndexLeft <= IndexRight ))
+        do
+            TokenRight="${TokenArray[IndexRight]}"
+            TokenLeft="${TokenArray[IndexLeft]}"
+
+            case "$TokenRight" in
+                '{'|'['|'}'|']')
+                    if ! check_next_token TokenArray "$IndexRight" 'left'
+                    then
+                        return 1
+                    fi
+
+                    if ! IsValueInArray "$IndexRight" CheckedIndexes
+                    then
+                        case "$TokenRight" in
+                            '{')
+                                expected_token='}'
+                            ;;
+                            '}')
+                                expected_token='{'
+                            ;;
+                            ']')
+                                expected_token='['
+                            ;;
+                            '[')
+                                expected_token=']'
+                            ;;
+                        esac
+
+                        CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexLeft" "$expected_token" 'right')"
+
+                        if IsEmpty "$CorrespondedIndex"
+                        then
+                            return 1
+                        fi
+
+                        CheckedIndexes+=("$CorrespondedIndex")
+                        CheckedIndexes+=("$IndexRight")
+
+                        unset CorrespondedIndex expected_token
+                    fi
+                ;;
+                *)
+                    if ! check_next_token TokenArray "$IndexRight" 'left'
+                    then
+                        return 1
+                    fi
+                ;;
+            esac
+
+            case "$TokenLeft" in
+                '{'|'['|'}'|']')
+                    if ! check_next_token TokenArray "$IndexLeft" 'right'
+                    then
+                        return 1
+                    fi
+
+                    if ! IsValueInArray "$IndexLeft" CheckedIndexes
+                    then
+                        case "$TokenLeft" in
+                            '{')
+                                expected_token='}'
+                            ;;
+                            '}')
+                                expected_token='{'
+                            ;;
+                            ']')
+                                expected_token='['
+                            ;;
+                            '[')
+                                expected_token=']'
+                            ;;
+                        esac
+
+                        CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexRight" "$expected_token" 'left')"
+
+                        if IsEmpty "$CorrespondedIndex"
+                        then
+                            return 1
+                        fi
+
+                        CheckedIndexes+=("$CorrespondedIndex")
+                        CheckedIndexes+=("$IndexLeft")
+                        
+                        unset CorrespondedIndex expected_token
+                    fi
+                ;;
+                *)
+                    if ! check_next_token TokenArray "$IndexLeft" 'right'
+                    then
+                        return 1
+                    fi
+                ;;
+            esac
+
+            IndexRight=$(( IndexRight - 1 ))
+            IndexLeft=$(( IndexLeft + 1 ))
+
+        done
+
+        return 0
+    }
+    
+    if IsEmpty "$JsonInput"
+    then
+        return 1
+    fi
+
+    TokenString=$(tokenise_json "$JsonInput")
+
+    IFS=' ' read -r -a TokensArray <<< "$TokenString"
+
+    IndexLeft=0
+    IndexRight=$(( ${#TokensArray[@]} - 1 ))
+
+    normalize_token_types TokensArray
+
+    if (( ${#TokensArray[@]} == 1 )) && [[ "${TokensArray[$IndexLeft]}" == "value" ]]
+    then
+        return 0
+    fi
+
+    if [[ "${TokensArray[$IndexLeft]}" != "value" && "${TokensArray[$IndexLeft]}" != "{" && "${TokensArray[$IndexLeft]}" != "[" ]]
+    then
+        return 1
+    fi
+
+    if ! check_json_structure TokensArray "$IndexRight" "$IndexLeft"
+    then
+        return 1
+    fi
+
+    return 0
 }
 
 WhatIs()
