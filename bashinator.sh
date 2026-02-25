@@ -331,18 +331,18 @@ IsJSON()
 
     found_correspondence()
     {
-        local -n array_name="$1"
+        local -n arr_ref="$1"
         local index="$2"
         local expected_token="$3"
         local shift_mode="$4"
-        local max_index min_index CorrespondedIndex
+        local max_index min_index
 
-        max_index=$(( ${#array_name[@]} - 1 ))
+        max_index=$(( ${#arr_ref[@]} - 1 ))
         min_index=0
 
         case "$shift_mode" in
             'right')
-                until [[ $expected_token == "${array_name[$index]}" ]]
+                until [[ $expected_token == "${arr_ref[$index]}" ]]
                 do
                     index=$(( index + 1 ))
                     if [[ $index -gt $max_index ]]
@@ -355,7 +355,7 @@ IsJSON()
 
             ;;
             'left')
-                until [[ $expected_token == "${array_name[$index]}" ]]
+                until [[ $expected_token == "${arr_ref[$index]}" ]]
                 do
                     index=$(( index - 1 ))
                     if [[ $index -lt $min_index ]]
