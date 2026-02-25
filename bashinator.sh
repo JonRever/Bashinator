@@ -646,23 +646,20 @@ IsJSON()
         local -n array="$1"
         local index="$2"
         local check_mode="$3"
-        local token
-        local -a ArrayToCheck
+        local token  
 
-        ArrayToCheck=("${array[@]}")
-
-        token="${ArrayToCheck[index]}"
+        token="${array[index]}"
 
         case "$check_mode" in
             'right')
-                next_token="${ArrayToCheck[index + 1]}"
+                next_token="${array[index + 1]}"
                 if ! expected_map "$token" "$next_token"
                 then
                     return 1
                 fi
             ;;
             'left')
-                next_token="${ArrayToCheck[index - 1]}"
+                next_token="${array[index - 1]}"
                 if ! expected_map_reverse "$token" "$next_token"
                 then
                     return 1
