@@ -332,10 +332,9 @@ IsJSON()
     found_correspondence()
     {
         local -n array_name="$1"
-        local checked_indexes_name="$2"
-        local index="$3"
-        local expected_token="$4"
-        local shift_mode="$5"
+        local index="$2"
+        local expected_token="$3"
+        local shift_mode="$4"
         local max_index min_index CorrespondedIndex
 
         max_index=$(( ${#array_name[@]} - 1 ))
@@ -343,7 +342,7 @@ IsJSON()
 
         case "$shift_mode" in
             'right')
-                until [[ $expected_token == "${array_name[$index]}" ]] && ! IsValueInArray "$index" "$checked_indexes_name"
+                until [[ $expected_token == "${array_name[$index]}" ]]
                 do
                     index=$(( index + 1 ))
                     if [[ $index -gt $max_index ]]
@@ -352,13 +351,11 @@ IsJSON()
                     fi
                 done
 
-                CorrespondedIndex="$index"
+                printf '%s' "$index"
 
-                printf '%s' "$CorrespondedIndex"
-                return 0
             ;;
             'left')
-                until [[ $expected_token == "${array_name[$index]}" ]] && ! IsValueInArray "$index" "$checked_indexes_name"
+                until [[ $expected_token == "${array_name[$index]}" ]]
                 do
                     index=$(( index - 1 ))
                     if [[ $index -lt $min_index ]]
@@ -367,12 +364,11 @@ IsJSON()
                     fi
                 done
 
-                CorrespondedIndex="$index"
-
-                printf '%s' "$CorrespondedIndex"
-                return 0
+                printf '%s' "$index"
             ;;
         esac
+
+        return 0
     }
 
     expected_map()
@@ -396,10 +392,10 @@ IsJSON()
                     'value')
                         return 0
                     ;;
-                    '{')
+                    '{' | 'opening_curly_brace')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
                     *)
@@ -407,12 +403,12 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '{')
+            '{' | 'opening_curly_brace')
                 case "$next_token" in
                     'key')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
 
@@ -421,18 +417,18 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '[')
+            '[' | 'opening_square_bracket')
                 case "$next_token" in
                     'value')
                         return 0
                     ;;
-                    '{')
+                    '{' | 'opening_curly_brace')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
-                    ']')
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
                     *)
@@ -445,23 +441,10 @@ IsJSON()
                     ',')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
-                    ']')
-                        return 0
-                    ;;
-                    *)
-                        return 1
-                    ;;
-                esac
-            ;;
-            ']')
-                case "$next_token" in
-                    ',')
-                        return 0
-                    ;;
-                    '}')
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
                     *)
@@ -469,15 +452,28 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '}')
+            ']' | 'closing_square_bracket')
                 case "$next_token" in
                     ',')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
-                    ']')
+                    *)
+                        return 1
+                    ;;
+                esac
+            ;;
+            '}' | 'closing_curly_brace')
+                case "$next_token" in
+                    ',')
+                        return 0
+                    ;;
+                    '}' | 'closing_curly_brace')
+                        return 0
+                    ;;
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
                     *)
@@ -490,13 +486,13 @@ IsJSON()
                     'key')
                         return 0
                     ;;
-                    '{')
+                    '{' | 'opening_curly_brace')
                         return 0
                     ;;
                     'value')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
                     *)
@@ -522,7 +518,7 @@ IsJSON()
                     ',')
                         return 0
                     ;;
-                    '{')
+                    '{' | 'opening_curly_brace')
                         return 0
                     ;;
                     *)
@@ -539,7 +535,7 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '{')
+            '{' | 'opening_curly_brace')
                 case "$next_token" in
                     ',')
                         return 0
@@ -547,19 +543,19 @@ IsJSON()
                     ':')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
                     *)
                         return 1
                 esac
             ;;
-            '[')
+            '[' | 'opening_square_bracket')
                 case "$next_token" in
                     ':')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
                     ',')
@@ -571,7 +567,7 @@ IsJSON()
             ;;
             'value')
                 case "$next_token" in
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
                     ':')
@@ -585,18 +581,18 @@ IsJSON()
                     ;;
                 esac
             ;;
-            ']')
+            ']' | 'closing_square_bracket')
                 case "$next_token" in
                     'value')
                         return 0
                     ;;
-                    '[')
+                    '[' | 'opening_square_bracket')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
-                    ']')
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
                     *)
@@ -604,18 +600,18 @@ IsJSON()
                     ;;
                 esac
             ;;
-            '}')
+            '}' | 'closing_curly_brace')
                 case "$next_token" in
                     'value')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
-                    ']')
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
-                    '{')
+                    '{' | 'opening_curly_brace')
                         return 0
                     ;;
                     *)
@@ -628,10 +624,10 @@ IsJSON()
                     'value')
                         return 0
                     ;;
-                    '}')
+                    '}' | 'closing_curly_brace')
                         return 0
                     ;;
-                    ']')
+                    ']' | 'closing_square_bracket')
                         return 0
                     ;;
                     *)
@@ -681,66 +677,68 @@ IsJSON()
         local -n array_name="$1"
         local IndexRight="$2"
         local IndexLeft="$3"
-        local TokenRight TokenLeft CorrespondedIndex expected_token
-        local -a TokenArray
-        local -a CheckedIndexes
-
-        TokenArray=("${array_name[@]}")
+        local TokenRight TokenLeft expected_token replecement_token_left replecement_token_right CorrespondedIndex
 
         while (( IndexLeft <= IndexRight ))
         do
-            TokenRight="${TokenArray[IndexRight]}"
-            TokenLeft="${TokenArray[IndexLeft]}"
+            TokenRight="${array_name[IndexRight]}"
+            TokenLeft="${array_name[IndexLeft]}"
 
             case "$TokenRight" in
                 '{'|'['|'}'|']')
-                    if ! check_next_token TokenArray "$IndexRight" 'left'
+                    if ! check_next_token array_name "$IndexRight" 'left'
                     then
                         Log -e 'Invalid next token'
                         return 1
                     fi
 
-                    if ! IsValueInArray "$IndexRight" CheckedIndexes
+                    case "$TokenRight" in
+                        '{')
+                            expected_token='}'
+                            replecement_token_left='closing_curly_brace'
+                            replecement_token_right='opening_curly_brace'
+                        ;;
+                        '}')
+                            expected_token='{'
+                            replecement_token_left='opening_curly_brace'
+                            replecement_token_right='closing_curly_brace'
+                        ;;
+                        ']')
+                            expected_token='['
+                            replecement_token_left='opening_square_bracket'
+                            replecement_token_right='closing_square_bracket'
+                        ;;
+                        '[')
+                            expected_token=']'
+                            replecement_token_left='closing_square_bracket'
+                            replecement_token_right='opening_square_bracket'
+                        ;;
+                    esac
+
+                    Log -d "Expected token: $expected_token"
+                    Log -d "Replacemnt token left: $replecement_token_left"
+                    Log -d "Replacemnt token right: $replecement_token_right"
+                    Log -d "Index left: $IndexLeft"
+                    Log -d "Index right: $IndexRight"
+                    Log -d "Token array: ${array_name[*]}"
+
+                    Log -d 'Finding corresponding index...'
+
+                    CorrespondedIndex=$(found_correspondence array_name "$IndexLeft" "$expected_token" 'right')
+
+                    if IsEmpty "$CorrespondedIndex"
                     then
-                        case "$TokenRight" in
-                            '{')
-                                expected_token='}'
-                            ;;
-                            '}')
-                                expected_token='{'
-                            ;;
-                            ']')
-                                expected_token='['
-                            ;;
-                            '[')
-                                expected_token=']'
-                            ;;
-                        esac
-
-                        Log -d "Expected token: $expected_token"
-                        Log -d "Index left: $IndexLeft"
-                        Log -d "Index right: $IndexRight"
-                        Log -d "Token array: ${TokenArray[*]}"
-                        Log -d "Checked indexes: ${CheckedIndexes[*]}"
-
-                        Log -d 'Finding corresponding index...'
-
-                        CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexLeft" "$expected_token" 'right')"
-
-                        if IsEmpty "$CorrespondedIndex"
-                        then
-                            Log -e 'No corresponding index found'
-                            return 1
-                        fi
-
-                        CheckedIndexes+=("$CorrespondedIndex")
-                        CheckedIndexes+=("$IndexRight")
-
-                        unset CorrespondedIndex expected_token
+                        Log -e 'No corresponding index found'
+                        return 1
                     fi
+                    
+                    array_name[CorrespondedIndex]="$replecement_token_left"
+                    array_name[IndexRight]="$replecement_token_right"
+
+                    unset expected_token replecement_token_left replecement_token_right CorrespondedIndex
                 ;;
                 *)
-                    if ! check_next_token TokenArray "$IndexRight" 'left'
+                    if ! check_next_token array_name "$IndexRight" 'left'
                     then
                         Log -e 'Invalid next token'
                         return 1
@@ -748,55 +746,62 @@ IsJSON()
                 ;;
             esac
 
+            TokenRight="${array_name[IndexRight]}"
+            TokenLeft="${array_name[IndexLeft]}"
+
             case "$TokenLeft" in
                 '{'|'['|'}'|']')
-                    if ! check_next_token TokenArray "$IndexLeft" 'right'
+                    if ! check_next_token array_name "$IndexLeft" 'right'
                     then
                         Log -e 'Invalid next token'
                         return 1
                     fi
 
-                    if ! IsValueInArray "$IndexLeft" CheckedIndexes
+                    case "$TokenLeft" in
+                        '{')
+                            expected_token='}'
+                            replecement_token_left='opening_curly_brace'
+                            replecement_token_right='closing_curly_brace'
+                        ;;
+                        '}')
+                            expected_token='{'
+                            replecement_token_left='closing_curly_brace'
+                            replecement_token_right='opening_curly_brace'
+                        ;;
+                        ']')
+                            expected_token='['
+                            replecement_token_left='closing_square_bracket'
+                            replecement_token_right='opening_square_bracket'
+                        ;;
+                        '[')
+                            expected_token=']'
+                            replecement_token_left='opening_square_bracket'
+                            replecement_token_right='closing_square_bracket'
+                        ;;
+                    esac
+
+                    Log -d "Expected token: $expected_token"
+                    Log -d "Index left: $IndexLeft"
+                    Log -d "Index right: $IndexRight"
+                    Log -d "Token array: ${array_name[*]}"
+
+                    Log -d 'Finding corresponding index...'
+
+                    CorrespondedIndex=$(found_correspondence array_name "$IndexRight" "$expected_token" 'left')
+
+                    if IsEmpty "$CorrespondedIndex"
                     then
-                        case "$TokenLeft" in
-                            '{')
-                                expected_token='}'
-                            ;;
-                            '}')
-                                expected_token='{'
-                            ;;
-                            ']')
-                                expected_token='['
-                            ;;
-                            '[')
-                                expected_token=']'
-                            ;;
-                        esac
-
-                        Log -d "Expected token: $expected_token"
-                        Log -d "Index left: $IndexLeft"
-                        Log -d "Index right: $IndexRight"
-                        Log -d "Token array: ${TokenArray[*]}"
-                        Log -d "Checked indexes: ${CheckedIndexes[*]}"
-
-                        Log -d 'Finding corresponding index...'
-
-                        CorrespondedIndex="$(found_correspondence TokenArray CheckedIndexes "$IndexRight" "$expected_token" 'left')"
-
-                        if IsEmpty "$CorrespondedIndex"
-                        then
-                            Log -e 'No corresponding index found'
-                            return 1
-                        fi
-
-                        CheckedIndexes+=("$CorrespondedIndex")
-                        CheckedIndexes+=("$IndexLeft")
-                        
-                        unset CorrespondedIndex expected_token
+                        Log -e 'No corresponding index found'
+                        return 1
                     fi
+
+                    array_name[IndexLeft]="$replecement_token_left"
+                    array_name[CorrespondedIndex]="$replecement_token_right"
+                    
+                    unset expected_token replecement_token_left replecement_token_right CorrespondedIndex
                 ;;
                 *)
-                    if ! check_next_token TokenArray "$IndexLeft" 'right'
+                    if ! check_next_token array_name "$IndexLeft" 'right'
                     then
                         Log -e 'Invalid next token'
                         return 1
