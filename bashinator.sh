@@ -720,7 +720,7 @@ IsJSON()
                     Log -d "Replacemnt token right: $replecement_token_right"
                     Log -d "Index left: $IndexLeft"
                     Log -d "Index right: $IndexRight"
-                    Log -d "Token array: ${array_name[*]}"
+                    #Log -d "Token array: ${array_name[*]}"
 
                     Log -d 'Finding corresponding index...'
 
@@ -783,7 +783,7 @@ IsJSON()
                     Log -d "Expected token: $expected_token"
                     Log -d "Index left: $IndexLeft"
                     Log -d "Index right: $IndexRight"
-                    Log -d "Token array: ${array_name[*]}"
+                    #Log -d "Token array: ${array_name[*]}"
 
                     Log -d 'Finding corresponding index...'
 
