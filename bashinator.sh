@@ -688,7 +688,7 @@ IsJSON()
                 '{'|'['|'}'|']')
                     if ! check_next_token array_name "$IndexRight" 'left'
                     then
-                        Log -e 'Invalid next token'
+                        #Log -e 'Invalid next token'
                         return 1
                     fi
 
@@ -715,20 +715,20 @@ IsJSON()
                         ;;
                     esac
 
-                    Log -d "Expected token: $expected_token"
-                    Log -d "Replacemnt token left: $replecement_token_left"
-                    Log -d "Replacemnt token right: $replecement_token_right"
-                    Log -d "Index left: $IndexLeft"
-                    Log -d "Index right: $IndexRight"
+                    #Log -d "Expected token: $expected_token"
+                    #Log -d "Replacemnt token left: $replecement_token_left"
+                    #Log -d "Replacemnt token right: $replecement_token_right"
+                    #Log -d "Index left: $IndexLeft"
+                    #Log -d "Index right: $IndexRight"
                     #Log -d "Token array: ${array_name[*]}"
 
-                    Log -d 'Finding corresponding index...'
+                    #Log -d 'Finding corresponding index...'
 
                     CorrespondedIndex=$(found_correspondence array_name "$IndexLeft" "$expected_token" 'right')
 
                     if IsEmpty "$CorrespondedIndex"
                     then
-                        Log -e 'No corresponding index found'
+                        #Log -e 'No corresponding index found'
                         return 1
                     fi
                     
@@ -740,7 +740,7 @@ IsJSON()
                 *)
                     if ! check_next_token array_name "$IndexRight" 'left'
                     then
-                        Log -e 'Invalid next token'
+                        #Log -e 'Invalid next token'
                         return 1
                     fi
                 ;;
@@ -753,7 +753,7 @@ IsJSON()
                 '{'|'['|'}'|']')
                     if ! check_next_token array_name "$IndexLeft" 'right'
                     then
-                        Log -e 'Invalid next token'
+                        #Log -e 'Invalid next token'
                         return 1
                     fi
 
@@ -780,12 +780,12 @@ IsJSON()
                         ;;
                     esac
 
-                    Log -d "Expected token: $expected_token"
-                    Log -d "Index left: $IndexLeft"
-                    Log -d "Index right: $IndexRight"
+                    #Log -d "Expected token: $expected_token"
+                    #Log -d "Index left: $IndexLeft"
+                    #Log -d "Index right: $IndexRight"
                     #Log -d "Token array: ${array_name[*]}"
 
-                    Log -d 'Finding corresponding index...'
+                    #Log -d 'Finding corresponding index...'
 
                     CorrespondedIndex=$(found_correspondence array_name "$IndexRight" "$expected_token" 'left')
 
@@ -803,7 +803,7 @@ IsJSON()
                 *)
                     if ! check_next_token array_name "$IndexLeft" 'right'
                     then
-                        Log -e 'Invalid next token'
+                        #Log -e 'Invalid next token'
                         return 1
                     fi
                 ;;
@@ -814,52 +814,52 @@ IsJSON()
 
         done
 
-        Log -d 'JSON structure is valid'
+        #Log -d 'JSON structure is valid'
         return 0
     }
     
     if IsEmpty "$JsonInput"
     then
-        Log -e 'Empty JSON input'
+        #Log -e 'Empty JSON input'
         return 1
     fi
 
-    Log -d "JSON input: $JsonInput"
+    #Log -d "JSON input: $JsonInput"
 
-    Log -d 'Tokenising JSON input...'
+    #Log -d 'Tokenising JSON input...'
 
     TokenString=$(tokenise_json "$JsonInput")
 
-    Log -d "Tokenised JSON: $TokenString"
+    #Log -d "Tokenised JSON: $TokenString"
 
     IFS=' ' read -r -a TokensArray <<< "$TokenString"
 
     IndexLeft=0
     IndexRight=$(( ${#TokensArray[@]} - 1 ))
 
-    Log -d 'Normalizing token types...'
+   #Log -d 'Normalizing token types...'
 
     normalize_token_types TokensArray
 
     if (( ${#TokensArray[@]} == 1 )) && [[ "${TokensArray[$IndexLeft]}" == "value" ]]
     then
-        Log -d 'Single value JSON input'
+        #Log -d 'Single value JSON input'
         return 0
     fi
 
     if [[ "${TokensArray[$IndexLeft]}" != "value" && "${TokensArray[$IndexLeft]}" != "{" && "${TokensArray[$IndexLeft]}" != "[" ]]
     then
-        Log -e 'Invalid JSON input'
+        #Log -e 'Invalid JSON input'
         return 1
     fi
 
     if ! check_json_structure TokensArray "$IndexRight" "$IndexLeft"
     then
-        Log -e 'Invalid JSON structure'
+        #Log -e 'Invalid JSON structure'
         return 1
     fi
 
-    Log -i 'Valid JSON input'
+    #Log -i 'Valid JSON input'
     return 0
 }
 
